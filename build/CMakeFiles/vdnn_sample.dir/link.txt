@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/vdnn_sample.dir/vdnn_sample.cpp.o  -o vdnn_sample  -L/home/beomsik/cuda/lib64 -Wl,-rpath,/home/beomsik/cuda/lib64 /home/beomsik/cuda/lib64/libcudart_static.a -lpthread -ldl /usr/lib/x86_64-linux-gnu/librt.so 

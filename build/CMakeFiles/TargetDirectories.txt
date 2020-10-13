@@ -1,0 +1,3 @@
+/home/beomsik/vdnn/build/CMakeFiles/rebuild_cache.dir
+/home/beomsik/vdnn/build/CMakeFiles/edit_cache.dir
+/home/beomsik/vdnn/build/CMakeFiles/vdnn_sample.dir

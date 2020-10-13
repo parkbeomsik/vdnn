@@ -12,7 +12,7 @@
 
 #include <cublas_v2.h>
 // #include <cudnn.h>
-#include "/home/beomsik/cuda/include/cudnn.h"
+#include <cudnn.h>
 //#include <cnmem.h>
 // #include "/home/mrhu/vdnn/cnmem/include/cnmem.h"
 #include "/home/beomsik/vdnn/cnmem/include/cnmem.h"
@@ -329,9 +329,12 @@ private:
   bool                          inPlaceOp;
 
   // profile results (chosen)
-  ProfiledFwdAlgoPerf_t         fwdAlgoPerf;
-  ProfiledBwdDataAlgoPerf_t     bwdDataAlgoPerf;
-  ProfiledBwdFilterAlgoPerf_t   bwdFilterAlgoPerf;
+  // ProfiledFwdAlgoPerf_t         fwdAlgoPerf;
+  // ProfiledBwdDataAlgoPerf_t     bwdDataAlgoPerf;
+  // ProfiledBwdFilterAlgoPerf_t   bwdFilterAlgoPerf;
+  cudnnConvolutionFwdAlgoPerf_t         fwdAlgoPerf;
+  cudnnConvolutionBwdDataAlgoPerf_t     bwdDataAlgoPerf;
+  cudnnConvolutionBwdFilterAlgoPerf_t   bwdFilterAlgoPerf;
 
   // profile results (all)
   cudnnConvolutionFwdAlgoPerf_t*        fwdProfileResults;
@@ -437,9 +440,9 @@ Layer::Layer(
 
         // set input descriptors
         checkCUDNN(cudnnSetTensor4dDescriptor(srcTensorDesc, tensorFormat, dataType, n_in, c_in, h_in, w_in));
-      	checkCUDNN(cudnnSetFilter4dDescriptor(filterDesc, dataType, k, c_in, r, s));
+      	checkCUDNN(cudnnSetFilter4dDescriptor(filterDesc, dataType, tensorFormat, k, c_in, r, s));
         checkCUDNN(cudnnSetTensor4dDescriptor(biasTensorDesc, tensorFormat, dataType, 1, k, 1, 1));
-        checkCUDNN(cudnnSetConvolution2dDescriptor(convDesc, pad_h, pad_w, stride_w, stride_h, 1, 1, modeConv));
+        checkCUDNN(cudnnSetConvolution2dDescriptor(convDesc, pad_h, pad_w, stride_w, stride_h, 1, 1, modeConv, dataType));
 
         // find dimension of convolution output
         checkCUDNN(cudnnGetConvolution2dForwardOutputDim(convDesc, srcTensorDesc, filterDesc, &n_out, &c_out, &h_out, &w_out));
@@ -516,7 +519,7 @@ Layer::Layer(
 
         // set input descriptors
         checkCUDNN(cudnnSetTensor4dDescriptor(srcTensorDesc, tensorFormat, dataType, n_in, c_in, h_in, w_in));
-        checkCUDNN(cudnnSetPooling2dDescriptor(poolingDesc, CUDNN_POOLING_MAX, r, s, pad_h, pad_w, stride_h, stride_w));
+        checkCUDNN(cudnnSetPooling2dDescriptor(poolingDesc, CUDNN_POOLING_MAX, CUDNN_NOT_PROPAGATE_NAN, r, s, pad_h, pad_w, stride_h, stride_w));
         // find dimension of pooling output
         checkCUDNN(cudnnGetPooling2dForwardOutputDim(poolingDesc, srcTensorDesc, &n_out, &c_out, &h_out, &w_out));
 
@@ -976,7 +979,7 @@ size_t Layer::convolutionBackward(int _layer_id_to_prefetch, void* _prefetchedSr
 #ifdef _PROFILE_INDIVIDUAL_LAYERS_
   if( (_PROFILE_BWD_==1)&&(this->id==_PROFILE_LAYER_ID_) )
 #endif
-  checkCUDNN(cudnnConvolutionBackwardFilter_v3( *cudnnHandle,
+  checkCUDNN(cudnnConvolutionBackwardFilter( *cudnnHandle,
                                                 &alpha,
                                                 srcTensorDesc,
                                                 srcData,
@@ -1092,7 +1095,7 @@ size_t Layer::convolutionBackward(int _layer_id_to_prefetch, void* _prefetchedSr
 #ifdef _PROFILE_INDIVIDUAL_LAYERS_
   if( (_PROFILE_BWD_==1)&&(this->id==_PROFILE_LAYER_ID_) )
 #endif
-  checkCUDNN(cudnnConvolutionBackwardData_v3( *cudnnHandle,
+  checkCUDNN(cudnnConvolutionBackwardData( *cudnnHandle,
                                                 &alpha,
                                                 filterDesc,
                                                 filterData,
